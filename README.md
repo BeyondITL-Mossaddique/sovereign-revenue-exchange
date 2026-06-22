@@ -159,8 +159,7 @@ The install takes 5–10 minutes on first run. When it finishes:
 Then deploy this project's components:
 
 ```sh
-export SRX_REPO_URL=https://github.com/<your-org>/sovereign-revenue-exchange
-export SRX_REPO_REVISION=main
+# Defaults already point at this repo's published URL; override if you fork.
 scripts/deploy.sh apply       # applies Project + 3 Components + 3 WorkflowRuns
 scripts/deploy.sh status      # shows component / releasebinding / httproute state
 ```

@@ -2,7 +2,7 @@
 # Apply, promote, or delete the OpenChoreo resources for this project.
 #
 # Reads:
-#   SRX_REPO_URL       Default: https://github.com/your-org/sovereign-revenue-exchange
+#   SRX_REPO_URL       Default: https://github.com/BeyondITL-Mossaddique/sovereign-revenue-exchange
 #                      The OpenChoreo build pulls source from this URL. The
 #                      workload.yaml files must be reachable at the configured
 #                      appPath inside that repo.
@@ -19,7 +19,7 @@
 #   delete           Delete components, then project.
 set -euo pipefail
 
-SRX_REPO_URL="${SRX_REPO_URL:-https://github.com/your-org/sovereign-revenue-exchange}"
+SRX_REPO_URL="${SRX_REPO_URL:-https://github.com/BeyondITL-Mossaddique/sovereign-revenue-exchange}"
 SRX_REPO_REVISION="${SRX_REPO_REVISION:-main}"
 SRX_NAMESPACE="${SRX_NAMESPACE:-default}"
 

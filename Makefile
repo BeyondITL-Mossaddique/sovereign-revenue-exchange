@@ -6,7 +6,7 @@
 
 SHELL := /usr/bin/env bash
 COMPOSE ?= docker compose
-SRX_REPO_URL ?= https://github.com/your-org/sovereign-revenue-exchange
+SRX_REPO_URL ?= https://github.com/BeyondITL-Mossaddique/sovereign-revenue-exchange
 SRX_REPO_REVISION ?= main
 
 .PHONY: help up down smoke test build clean deploy status promote-staging promote-production delete openchoreo-up
