@@ -1,0 +1,58 @@
+# Component + build WorkflowRun for the exchange-gateway service.
+# Adapted from samples/from-source/projects/url-shortener/components/api-service.yaml.
+#
+# This is the only externally-exposed component. Its workload.yaml sets
+# `visibility: [external]` on the http endpoint, which causes the platform's
+# deployment/service ComponentType to create an HTTPRoute on the project's
+# external gateway. Path: /<env>-default.<gateway-host>/exchange-gateway-http
+# (the exact host is composed from `metadata.environmentName` and the
+# external gateway hostname configured for the data plane).
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: exchange-gateway
+  namespace: default
+spec:
+  owner:
+    projectName: sovereign-revenue-exchange
+
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+
+  autoDeploy: true
+
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/exchange-gateway"
+      docker:
+        context: "/services/exchange-gateway"
+        filePath: "/services/exchange-gateway/Dockerfile"
+
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: exchange-gateway-build-01
+  labels:
+    openchoreo.dev/project: "sovereign-revenue-exchange"
+    openchoreo.dev/component: "exchange-gateway"
+spec:
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/exchange-gateway"
+      docker:
+        context: "/services/exchange-gateway"
+        filePath: "/services/exchange-gateway/Dockerfile"

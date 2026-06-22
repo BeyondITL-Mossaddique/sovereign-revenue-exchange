@@ -1,0 +1,57 @@
+# Component + build WorkflowRun for the taxpayer-registry service.
+#
+# Adapted from:
+#   https://github.com/openchoreo/openchoreo/blob/release-v1.1/samples/from-source/projects/url-shortener/components/api-service.yaml
+#
+# Placeholders __SRX_REPO_URL__ and __SRX_REPO_REVISION__ are substituted by
+# scripts/deploy.sh from the SRX_REPO_URL and SRX_REPO_REVISION environment
+# variables before apply.
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: taxpayer-registry
+  namespace: default
+spec:
+  owner:
+    projectName: sovereign-revenue-exchange
+
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+
+  autoDeploy: true
+
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/taxpayer-registry"
+      docker:
+        context: "/services/taxpayer-registry"
+        filePath: "/services/taxpayer-registry/Dockerfile"
+
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: taxpayer-registry-build-01
+  labels:
+    openchoreo.dev/project: "sovereign-revenue-exchange"
+    openchoreo.dev/component: "taxpayer-registry"
+spec:
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/taxpayer-registry"
+      docker:
+        context: "/services/taxpayer-registry"
+        filePath: "/services/taxpayer-registry/Dockerfile"

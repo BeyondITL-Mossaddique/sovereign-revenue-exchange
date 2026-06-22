@@ -1,0 +1,22 @@
+# OpenChoreo workload descriptor.
+#
+# Picked up by the dockerfile-builder ClusterWorkflow when the Component is
+# built. Defines the network endpoints the platform should expose.
+#
+# Adapted from:
+#   https://github.com/openchoreo/sample-workloads/blob/main/project-url-shortener/api-service/workload.yaml
+apiVersion: openchoreo.dev/v1alpha1
+
+metadata:
+  name: taxpayer-registry
+
+# `project` visibility keeps this service callable only from other components
+# in the same OpenChoreo Project. The platform does not publish it via the
+# external gateway.
+endpoints:
+  - name: http
+    type: HTTP
+    port: 8000
+    visibility:
+      - project
+    schemaFile: openapi/openapi.json

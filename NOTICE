@@ -1,0 +1,35 @@
+Sovereign Revenue Data Exchange — an OpenChoreo reference
+Copyright (c) 2026 The Sovereign Revenue Data Exchange contributors
+
+This project is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+DISCLAIMER
+
+This project is an independent, open-source reference implementation. It is
+NOT affiliated with, endorsed by, or sponsored by the National Board of
+Revenue (NBR) of Bangladesh, the Government of the People's Republic of
+Bangladesh, or any other government body, agency, or authority.
+
+The service names and capabilities in this reference are modelled loosely on
+the kinds of systems found in national revenue ecosystems (e.g. taxpayer
+identity lookup, return filing, inter-agency data exchange) purely to make
+the demonstration concrete. They do not represent, replicate, or interoperate
+with any real production system.
+
+SYNTHETIC DATA
+
+All data in this repository — taxpayer records, national IDs (NIDs),
+taxpayer identification numbers (TINs), return figures, and any other
+records — is synthetic and obviously fake. TINs use a reserved test range
+(900000001–999999999) that is not issued in any real-world TIN scheme.
+Names follow the pattern "Test Taxpayer N". No real personally identifiable
+information (PII) is present.
+
+THIRD-PARTY COMPONENTS
+
+This project depends on third-party open-source software, including but not
+limited to FastAPI, Pydantic, uvicorn, httpx, and pytest. Each is governed
+by its own license. OpenChoreo (https://openchoreo.dev) is referenced as the
+target platform; this project does not include or redistribute OpenChoreo
+itself.

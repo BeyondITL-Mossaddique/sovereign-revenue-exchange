@@ -1,0 +1,49 @@
+# OpenChoreo workload descriptor for the exchange gateway.
+#
+# This is the only externally-exposed service. The platform publishes it
+# through its external gateway (host ports 19080/19443 in the quick-start
+# install). The upstream services remain project-scoped and unreachable from
+# outside the project.
+#
+# Adapted from:
+#   https://github.com/openchoreo/sample-workloads/blob/main/project-url-shortener/api-service/workload.yaml
+apiVersion: openchoreo.dev/v1alpha1
+
+metadata:
+  name: exchange-gateway
+
+endpoints:
+  - name: http
+    type: HTTP
+    port: 8000
+    visibility:
+      - external
+    schemaFile: openapi/openapi.json
+
+# Declare the in-project services this component depends on. OpenChoreo uses
+# these dependencies to enforce that the upstreams expose a `project`-visible
+# endpoint (they do — see services/taxpayer-registry/workload.yaml and
+# services/returns/workload.yaml).
+dependencies:
+  endpoints:
+    - component: taxpayer-registry
+      name: http
+      visibility: project
+      envBindings:
+        address: _
+    - component: returns
+      name: http
+      visibility: project
+      envBindings:
+        address: _
+
+# In-cluster service DNS is the component name. This mirrors the
+# url-shortener sample's POSTGRES_DSN pattern.
+configurations:
+  env:
+    - name: TAXPAYER_REGISTRY_URL
+      value: "http://taxpayer-registry:8000"
+    - name: RETURNS_URL
+      value: "http://returns:8000"
+    - name: UPSTREAM_TIMEOUT_S
+      value: "5.0"

@@ -1,0 +1,17 @@
+# OpenChoreo workload descriptor for the returns service.
+#
+# Adapted from:
+#   https://github.com/openchoreo/sample-workloads/blob/main/project-url-shortener/api-service/workload.yaml
+apiVersion: openchoreo.dev/v1alpha1
+
+metadata:
+  name: returns
+
+# Project-scoped: only the exchange-gateway (same project) may call this.
+endpoints:
+  - name: http
+    type: HTTP
+    port: 8000
+    visibility:
+      - project
+    schemaFile: openapi/openapi.json

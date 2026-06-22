@@ -1,0 +1,62 @@
+# Local end-to-end compose for the three reference services.
+#
+# In OpenChoreo the same three services are deployed as Component resources
+# inside one Project, and the gateway is exposed via an API/managed endpoint.
+# This compose file mirrors that wiring (gateway → registry + returns) so
+# the smoke tests in scripts/smoke.sh can be run before touching OpenChoreo.
+
+services:
+  taxpayer-registry:
+    build:
+      context: ./services/taxpayer-registry
+      target: runtime
+    image: srx-taxpayer-registry:dev
+    container_name: srx-taxpayer-registry
+    expose:
+      - "8000"
+    ports:
+      - "18001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  returns:
+    build:
+      context: ./services/returns
+      target: runtime
+    image: srx-returns:dev
+    container_name: srx-returns
+    expose:
+      - "8000"
+    ports:
+      - "18002:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  exchange-gateway:
+    build:
+      context: ./services/exchange-gateway
+      target: runtime
+    image: srx-exchange-gateway:dev
+    container_name: srx-exchange-gateway
+    environment:
+      TAXPAYER_REGISTRY_URL: "http://taxpayer-registry:8000"
+      RETURNS_URL: "http://returns:8000"
+      UPSTREAM_TIMEOUT_S: "5.0"
+    ports:
+      - "18000:8000"
+    depends_on:
+      taxpayer-registry:
+        condition: service_healthy
+      returns:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

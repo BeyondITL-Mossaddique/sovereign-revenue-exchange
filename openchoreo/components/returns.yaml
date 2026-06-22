@@ -1,0 +1,51 @@
+# Component + build WorkflowRun for the returns service.
+# Adapted from samples/from-source/projects/url-shortener/components/api-service.yaml.
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: returns
+  namespace: default
+spec:
+  owner:
+    projectName: sovereign-revenue-exchange
+
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+
+  autoDeploy: true
+
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/returns"
+      docker:
+        context: "/services/returns"
+        filePath: "/services/returns/Dockerfile"
+
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: WorkflowRun
+metadata:
+  name: returns-build-01
+  labels:
+    openchoreo.dev/project: "sovereign-revenue-exchange"
+    openchoreo.dev/component: "returns"
+spec:
+  workflow:
+    kind: ClusterWorkflow
+    name: dockerfile-builder
+    parameters:
+      repository:
+        url: "__SRX_REPO_URL__"
+        revision:
+          branch: "__SRX_REPO_REVISION__"
+        appPath: "/services/returns"
+      docker:
+        context: "/services/returns"
+        filePath: "/services/returns/Dockerfile"

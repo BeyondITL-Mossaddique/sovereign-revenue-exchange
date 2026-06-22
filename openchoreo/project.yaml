@@ -1,0 +1,22 @@
+# OpenChoreo Project resource for the Sovereign Revenue Data Exchange.
+#
+# Adapted from:
+#   https://github.com/openchoreo/openchoreo/blob/release-v1.1/samples/from-source/projects/url-shortener/project.yaml
+#
+# Uses the `default` DeploymentPipeline provisioned by the quick-start install,
+# which promotes Development -> Staging -> Production.
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: sovereign-revenue-exchange
+  namespace: default
+  annotations:
+    openchoreo.dev/display-name: Sovereign Revenue Data Exchange
+    openchoreo.dev/description: >-
+      Reference taxpayer registry, returns, and inter-agency exchange gateway.
+      Synthetic data only. Not affiliated with any government body.
+  labels:
+    openchoreo.dev/name: sovereign-revenue-exchange
+spec:
+  deploymentPipelineRef:
+    name: default
