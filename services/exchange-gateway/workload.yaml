@@ -28,13 +28,9 @@ dependencies:
     - component: taxpayer-registry
       name: http
       visibility: project
-      envBindings:
-        address: _
     - component: returns
       name: http
       visibility: project
-      envBindings:
-        address: _
 
 # In-cluster service DNS is the component name. This mirrors the
 # url-shortener sample's POSTGRES_DSN pattern.
