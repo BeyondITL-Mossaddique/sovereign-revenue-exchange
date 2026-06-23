@@ -342,7 +342,10 @@
       results.classList.add('hidden');
       hideStatus();
       try {
-        const resp = await fetch('/exchange/taxpayer-profile/' + encodeURIComponent(tin), {
+        // Relative path so the call works whether the dashboard is served at
+        // "/" (local dev) or behind the OpenChoreo gateway's "/exchange-gateway-http/"
+        // path prefix. The leading "./" resolves against document.baseURI.
+        const resp = await fetch('./exchange/taxpayer-profile/' + encodeURIComponent(tin), {
           headers: { 'X-Requesting-Agency': 'minister-dashboard' }
         });
         if (resp.status === 404) {
