@@ -29,16 +29,16 @@ def test_healthz(client: TestClient) -> None:
 
 
 def test_get_known_taxpayer(client: TestClient) -> None:
-    r = client.get("/taxpayers/900000001")
+    r = client.get("/taxpayers/900000000001")
     assert r.status_code == 200
     body = r.json()
-    assert body["tin"] == "900000001"
+    assert body["tin"] == "900000000001"
     assert body["nid"] == "1000000001"
     assert body["name"].startswith("Test Taxpayer")
 
 
 def test_get_unknown_taxpayer(client: TestClient) -> None:
-    r = client.get("/taxpayers/900099999")
+    r = client.get("/taxpayers/900000099999")
     assert r.status_code == 404
 
 
@@ -47,7 +47,7 @@ def test_lookup_by_nid(client: TestClient) -> None:
     assert r.status_code == 200
     rows = r.json()
     assert len(rows) == 1
-    assert rows[0]["tin"] == "900000003"
+    assert rows[0]["tin"] == "900000000003"
 
 
 def test_lookup_by_nid_validation(client: TestClient) -> None:
@@ -92,9 +92,19 @@ def test_tin_validation_rejects_non_test_range() -> None:
     from app.models import Taxpayer
     from pydantic import ValidationError
 
+    # 12-digit numeric string, but below the reserved test range minimum.
     with pytest.raises(ValidationError):
         Taxpayer(
-            tin="123456789",
+            tin="123456789012",
+            nid="1234567890",
+            name="Should Fail",
+            registered_on="2024-01-01",
+        )
+
+    # Wrong length (9 digits, the old format) — must also be rejected.
+    with pytest.raises(ValidationError):
+        Taxpayer(
+            tin="900000001",
             nid="1234567890",
             name="Should Fail",
             registered_on="2024-01-01",

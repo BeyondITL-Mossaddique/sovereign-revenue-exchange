@@ -22,8 +22,8 @@ def client() -> TestClient:
         yield c
 
 
-TAXPAYER_900000001 = {
-    "tin": "900000001",
+TAXPAYER_900000000001 = {
+    "tin": "900000000001",
     "nid": "1000000001",
     "name": "Test Taxpayer 001",
     "phone": "+880-1700000001",
@@ -31,10 +31,10 @@ TAXPAYER_900000001 = {
     "registered_on": "2024-01-15",
 }
 
-RETURNS_900000001 = [
+RETURNS_900000000001 = [
     {
         "id": "R001",
-        "tin": "900000001",
+        "tin": "900000000001",
         "period": "2024",
         "figures": {
             "gross_income": "1200000.00",
@@ -54,22 +54,35 @@ def test_healthz(client: TestClient) -> None:
     assert r.json()["service"] == "exchange-gateway"
 
 
+def test_dashboard_root(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    body = r.text
+    # Page renders as the BeyondITL minister-facing dashboard, defaults
+    # the TIN input to a valid 12-digit synthetic value, and references
+    # the gateway endpoint it calls.
+    assert "BeyondITL" in body
+    assert "900000000001" in body
+    assert "/exchange/taxpayer-profile/" in body
+
+
 @respx.mock
 def test_taxpayer_profile_happy_path(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900000001").mock(
-        return_value=Response(200, json=TAXPAYER_900000001)
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000000001").mock(
+        return_value=Response(200, json=TAXPAYER_900000000001)
     )
     respx.get(f"{RETURNS_URL}/returns").mock(
-        return_value=Response(200, json=RETURNS_900000001)
+        return_value=Response(200, json=RETURNS_900000000001)
     )
 
     r = client.get(
-        "/exchange/taxpayer-profile/900000001",
+        "/exchange/taxpayer-profile/900000000001",
         headers={"X-Requesting-Agency": "customs"},
     )
     assert r.status_code == 200
     body = r.json()
-    assert body["taxpayer"]["tin"] == "900000001"
+    assert body["taxpayer"]["tin"] == "900000000001"
     assert body["served_to_agency"] == "customs"
     assert len(body["returns"]) == 1
     assert body["returns"][0]["id"] == "R001"
@@ -77,33 +90,33 @@ def test_taxpayer_profile_happy_path(client: TestClient) -> None:
 
 @respx.mock
 def test_taxpayer_profile_not_found(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900099999").mock(
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000099999").mock(
         return_value=Response(404, json={"detail": "not found"})
     )
-    r = client.get("/exchange/taxpayer-profile/900099999")
+    r = client.get("/exchange/taxpayer-profile/900000099999")
     assert r.status_code == 404
 
 
 @respx.mock
 def test_taxpayer_profile_upstream_failure(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900000001").mock(
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000000001").mock(
         return_value=Response(500)
     )
-    r = client.get("/exchange/taxpayer-profile/900000001")
+    r = client.get("/exchange/taxpayer-profile/900000000001")
     assert r.status_code == 502
 
 
 @respx.mock
 def test_verify_match(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900000001").mock(
-        return_value=Response(200, json=TAXPAYER_900000001)
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000000001").mock(
+        return_value=Response(200, json=TAXPAYER_900000000001)
     )
     respx.get(f"{RETURNS_URL}/returns").mock(
-        return_value=Response(200, json=RETURNS_900000001)
+        return_value=Response(200, json=RETURNS_900000000001)
     )
     r = client.post(
         "/exchange/verify",
-        json={"tin": "900000001", "period": "2024", "claimed_status": "accepted"},
+        json={"tin": "900000000001", "period": "2024", "claimed_status": "accepted"},
         headers={"X-Requesting-Agency": "audit-office"},
     )
     assert r.status_code == 200
@@ -115,15 +128,15 @@ def test_verify_match(client: TestClient) -> None:
 
 @respx.mock
 def test_verify_mismatch(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900000001").mock(
-        return_value=Response(200, json=TAXPAYER_900000001)
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000000001").mock(
+        return_value=Response(200, json=TAXPAYER_900000000001)
     )
     respx.get(f"{RETURNS_URL}/returns").mock(
-        return_value=Response(200, json=RETURNS_900000001)
+        return_value=Response(200, json=RETURNS_900000000001)
     )
     r = client.post(
         "/exchange/verify",
-        json={"tin": "900000001", "period": "2024", "claimed_status": "rejected"},
+        json={"tin": "900000000001", "period": "2024", "claimed_status": "rejected"},
     )
     assert r.status_code == 200
     body = r.json()
@@ -133,13 +146,13 @@ def test_verify_mismatch(client: TestClient) -> None:
 
 @respx.mock
 def test_verify_period_missing(client: TestClient) -> None:
-    respx.get(f"{REGISTRY_URL}/taxpayers/900000001").mock(
-        return_value=Response(200, json=TAXPAYER_900000001)
+    respx.get(f"{REGISTRY_URL}/taxpayers/900000000001").mock(
+        return_value=Response(200, json=TAXPAYER_900000000001)
     )
     respx.get(f"{RETURNS_URL}/returns").mock(return_value=Response(200, json=[]))
     r = client.post(
         "/exchange/verify",
-        json={"tin": "900000001", "period": "2099", "claimed_status": "accepted"},
+        json={"tin": "900000000001", "period": "2099", "claimed_status": "accepted"},
     )
     assert r.status_code == 200
     body = r.json()

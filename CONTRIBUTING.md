@@ -7,8 +7,10 @@ to current OpenChoreo conventions are the most valuable.
 ## Ground rules
 
 - **Synthetic data only.** Do not commit anything that resembles real PII,
-  real TINs, real NIDs, or real return figures. TINs must stay within the
-  reserved test range (`900000001`–`999999999`).
+  real TINs, real NIDs, or real return figures. Bangladesh TINs are 12
+  digits for both individuals and companies; TINs in this repo must stay
+  within the reserved 12-digit test range
+  (`900000000001`–`999999999999`).
 - **Mirror OpenChoreo samples.** If you add or change anything under
   `openchoreo/`, base the change on the current
   [openchoreo/openchoreo samples](https://github.com/openchoreo/openchoreo/tree/release-v1.1/samples)

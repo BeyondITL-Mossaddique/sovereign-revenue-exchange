@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sovereign Revenue Data Exchange — Minister's View</title>
+  <style>
+    :root {
+      --beyonditl-ink: #0b1f3a;
+      --beyonditl-accent: #1f6feb;
+      --beyonditl-soft: #f1f5fb;
+      --beyonditl-line: #d8e1ee;
+      --beyonditl-ok: #1f7a3a;
+      --beyonditl-warn: #9a5a00;
+      --beyonditl-bad: #a02828;
+      --beyonditl-muted: #5d6b80;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--beyonditl-ink);
+      background: var(--beyonditl-soft);
+      line-height: 1.5;
+    }
+    header.bitl {
+      background: var(--beyonditl-ink);
+      color: white;
+      padding: 24px 32px;
+      border-bottom: 4px solid var(--beyonditl-accent);
+    }
+    header.bitl .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header.bitl .logo {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      background: var(--beyonditl-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+    header.bitl h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+    header.bitl .sub {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #c8d3e5;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+    .lede {
+      font-size: 17px;
+      color: var(--beyonditl-ink);
+      margin: 0 0 24px;
+    }
+    .lookup {
+      background: white;
+      border: 1px solid var(--beyonditl-line);
+      border-radius: 10px;
+      padding: 20px 22px;
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    .lookup label {
+      display: block;
+      font-size: 13px;
+      color: var(--beyonditl-muted);
+      margin-bottom: 6px;
+    }
+    .lookup input {
+      font: inherit;
+      font-size: 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--beyonditl-line);
+      border-radius: 6px;
+      min-width: 260px;
+    }
+    .lookup button {
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      background: var(--beyonditl-accent);
+      color: white;
+      border: 0;
+      padding: 11px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .lookup button:hover { background: #1456c6; }
+    .lookup button[disabled] { opacity: 0.6; cursor: progress; }
+    .lookup .hint {
+      font-size: 12px;
+      color: var(--beyonditl-muted);
+      width: 100%;
+      margin-top: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .card {
+      background: white;
+      border: 1px solid var(--beyonditl-line);
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--beyonditl-muted);
+      font-weight: 600;
+    }
+    .field { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--beyonditl-line); }
+    .field:last-child { border-bottom: 0; }
+    .field .k { color: var(--beyonditl-muted); font-size: 13px; }
+    .field .v { font-weight: 500; text-align: right; }
+    .returns-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .returns-table th, .returns-table td {
+      text-align: left;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--beyonditl-line);
+    }
+    .returns-table th { color: var(--beyonditl-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .returns-table tr:last-child td { border-bottom: 0; }
+    .status-pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .status-accepted { background: #e3f6ea; color: var(--beyonditl-ok); }
+    .status-submitted { background: #fff4dc; color: var(--beyonditl-warn); }
+    .status-rejected  { background: #fbe3e3; color: var(--beyonditl-bad); }
+    .empty {
+      font-style: italic;
+      color: var(--beyonditl-muted);
+      text-align: center;
+      padding: 8px 0;
+    }
+    .governance {
+      grid-column: 1 / -1;
+      background: #eef5ff;
+      border: 1px solid #c7dafb;
+    }
+    .governance h2 { color: #0f3a85; }
+    .governance ul { margin: 8px 0 0 18px; padding: 0; }
+    .governance li { margin-bottom: 6px; }
+    .governance .lock {
+      display: inline-block;
+      background: var(--beyonditl-accent);
+      color: white;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      margin-right: 8px;
+      text-transform: uppercase;
+    }
+    .notice {
+      margin-top: 18px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--beyonditl-line);
+    }
+    .notice.error { background: #fbe3e3; border-color: #f3b9b9; color: var(--beyonditl-bad); }
+    .notice.info  { background: #eaf2ff; border-color: #c7dafb; color: #0f3a85; }
+    footer.bitl {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px 24px 32px;
+      color: var(--beyonditl-muted);
+      font-size: 12.5px;
+      border-top: 1px solid var(--beyonditl-line);
+    }
+    footer.bitl strong { color: var(--beyonditl-ink); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="bitl">
+    <div class="brand">
+      <div class="logo">B</div>
+      <div>
+        <h1>BeyondITL · Sovereign Revenue Data Exchange</h1>
+        <div class="sub">Minister's view — taxpayer profile across agencies</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <p class="lede">
+      Enter a taxpayer's TIN to see the unified profile that is returned to a
+      requesting agency through the governed exchange gateway.
+    </p>
+
+    <form class="lookup" id="lookup-form" autocomplete="off">
+      <div style="flex: 1; min-width: 260px;">
+        <label for="tin">Taxpayer Identification Number (TIN)</label>
+        <input
+          id="tin"
+          name="tin"
+          type="text"
+          inputmode="numeric"
+          pattern="\d{12}"
+          maxlength="12"
+          value="900000000001"
+          required
+        />
+        <div class="hint">12 digits. Pre-filled with a synthetic test TIN.</div>
+      </div>
+      <button type="submit" id="lookup-btn">Look up profile</button>
+    </form>
+
+    <div id="status" class="notice info hidden"></div>
+
+    <section id="results" class="grid hidden">
+      <div class="card" id="identity-card">
+        <h2>1. Taxpayer identity</h2>
+        <div id="identity-body"></div>
+      </div>
+
+      <div class="card" id="returns-card">
+        <h2>2. Filed returns</h2>
+        <div id="returns-body"></div>
+      </div>
+
+      <div class="card governance">
+        <h2>3. How this data reached you</h2>
+        <p style="margin-top: 0;">
+          <span class="lock">Governed</span>
+          The profile above was assembled by the exchange gateway, not by
+          giving the requesting agency direct access to the underlying
+          databases. Every reach across agency lines goes through the same
+          single, auditable surface.
+        </p>
+        <ul>
+          <li><strong>Authenticated request.</strong> The requesting agency is identified by the <code>X-Requesting-Agency</code> header and recorded with each response (this lookup is attributed to <code>minister-dashboard</code>).</li>
+          <li><strong>Rate-limited &amp; auditable.</strong> Calls flow through the OpenChoreo data plane, where rate limits, quotas, and access policy are applied centrally — not implemented inside each service.</li>
+          <li><strong>Zero-trust between agencies.</strong> The <em>taxpayer-registry</em> and <em>returns</em> systems are not directly reachable by the requesting agency; they are private to the project and only the gateway can compose their data.</li>
+          <li><strong>Sovereign, on-premises stack.</strong> The whole platform runs in-country on open-source components — no proprietary control-plane and no vendor lock-in.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bitl">
+    A BeyondITL reference implementation. <br/>
+    <strong>Synthetic data only.</strong> All TINs are in a reserved 12-digit
+    test range (<code>900000000001</code>–<code>999999999999</code>) and all
+    names follow the pattern <code>Test Taxpayer N</code>.
+    This project is <strong>not affiliated with</strong> the National Board of
+    Revenue (NBR) of Bangladesh, the Government of Bangladesh, or any other
+    government body. Engineers can inspect the technical APIs at
+    <a href="/docs">/docs</a> on each service.
+  </footer>
+
+  <script>
+    const form = document.getElementById('lookup-form');
+    const tinInput = document.getElementById('tin');
+    const btn = document.getElementById('lookup-btn');
+    const statusEl = document.getElementById('status');
+    const results = document.getElementById('results');
+    const identityBody = document.getElementById('identity-body');
+    const returnsBody = document.getElementById('returns-body');
+
+    function showStatus(kind, message) {
+      statusEl.className = 'notice ' + kind;
+      statusEl.textContent = message;
+      statusEl.classList.remove('hidden');
+    }
+    function hideStatus() {
+      statusEl.classList.add('hidden');
+      statusEl.textContent = '';
+    }
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function field(k, v) {
+      return '<div class="field"><span class="k">' + escapeHtml(k) +
+             '</span><span class="v">' + escapeHtml(v) + '</span></div>';
+    }
+    function formatMoney(amount, currency) {
+      const n = Number(amount);
+      if (!isFinite(n)) return escapeHtml(amount + ' ' + (currency || ''));
+      return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+             ' ' + (currency || '');
+    }
+
+    function renderIdentity(taxpayer, servedTo) {
+      identityBody.innerHTML =
+        field('TIN', taxpayer.tin) +
+        field('National ID', taxpayer.nid) +
+        field('Name', taxpayer.name) +
+        field('Registered on', taxpayer.registered_on) +
+        field('Served to agency', servedTo || '—');
+    }
+    function renderReturns(returns) {
+      if (!returns || returns.length === 0) {
+        returnsBody.innerHTML = '<div class="empty">No returns on file for this taxpayer.</div>';
+        return;
+      }
+      const rows = returns.map(r => {
+        const statusClass = 'status-' + (r.status || '').toLowerCase();
+        return '<tr>' +
+          '<td>' + escapeHtml(r.id) + '</td>' +
+          '<td>' + escapeHtml(r.period) + '</td>' +
+          '<td><span class="status-pill ' + statusClass + '">' + escapeHtml(r.status) + '</span></td>' +
+          '<td style="text-align: right;">' + formatMoney(r.tax_payable, r.currency) + '</td>' +
+        '</tr>';
+      }).join('');
+      returnsBody.innerHTML =
+        '<table class="returns-table">' +
+          '<thead><tr><th>ID</th><th>Period</th><th>Status</th><th style="text-align:right;">Tax payable</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>';
+    }
+
+    async function lookup(tin) {
+      btn.disabled = true;
+      btn.textContent = 'Looking up…';
+      results.classList.add('hidden');
+      hideStatus();
+      try {
+        const resp = await fetch('/exchange/taxpayer-profile/' + encodeURIComponent(tin), {
+          headers: { 'X-Requesting-Agency': 'minister-dashboard' }
+        });
+        if (resp.status === 404) {
+          showStatus('error',
+            'No taxpayer is registered with TIN ' + tin + '. ' +
+            'Check the number, or try the default value to see a populated profile.');
+          return;
+        }
+        if (!resp.ok) {
+          showStatus('error',
+            'The gateway could not complete this lookup (HTTP ' + resp.status + '). ' +
+            'An engineer can inspect /docs for details.');
+          return;
+        }
+        const data = await resp.json();
+        renderIdentity(data.taxpayer, data.served_to_agency);
+        renderReturns(data.returns);
+        results.classList.remove('hidden');
+      } catch (err) {
+        showStatus('error', 'The gateway is unreachable. Please try again in a moment.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Look up profile';
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const tin = tinInput.value.trim();
+      if (!/^\d{12}$/.test(tin)) {
+        showStatus('error', 'A TIN must be exactly 12 digits.');
+        return;
+      }
+      lookup(tin);
+    });
+
+    // Auto-load the default profile so the dashboard is populated on open.
+    window.addEventListener('DOMContentLoaded', () => lookup(tinInput.value.trim()));
+  </script>
+</body>
+</html>

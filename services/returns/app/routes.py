@@ -77,7 +77,7 @@ def get_return(return_id: str) -> TaxReturn:
 
 @router.get("/returns", response_model=List[TaxReturn], tags=["returns"])
 def list_returns_for_tin(
-    tin: str = Query(..., description="9-digit TIN in the reserved test range"),
+    tin: str = Query(..., description="12-digit TIN in the reserved test range"),
 ) -> List[TaxReturn]:
     with db.cursor() as cur:
         rows = cur.execute(

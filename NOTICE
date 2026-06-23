@@ -21,10 +21,11 @@ SYNTHETIC DATA
 
 All data in this repository — taxpayer records, national IDs (NIDs),
 taxpayer identification numbers (TINs), return figures, and any other
-records — is synthetic and obviously fake. TINs use a reserved test range
-(900000001–999999999) that is not issued in any real-world TIN scheme.
-Names follow the pattern "Test Taxpayer N". No real personally identifiable
-information (PII) is present.
+records — is synthetic and obviously fake. Bangladesh TINs are 12 digits
+for both individuals and companies; this reference uses a reserved test
+range (900000000001–999999999999) that is not issued in any real-world TIN
+scheme. Names follow the pattern "Test Taxpayer N". No real personally
+identifiable information (PII) is present.
 
 THIRD-PARTY COMPONENTS
 

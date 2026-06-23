@@ -31,23 +31,23 @@ def test_get_seed_return(client: TestClient) -> None:
     r = client.get("/returns/R001")
     assert r.status_code == 200
     body = r.json()
-    assert body["tin"] == "900000001"
+    assert body["tin"] == "900000000001"
     assert body["period"] == "2024"
     assert body["status"] == "accepted"
 
 
 def test_list_returns_for_tin(client: TestClient) -> None:
-    r = client.get("/returns", params={"tin": "900000001"})
+    r = client.get("/returns", params={"tin": "900000000001"})
     assert r.status_code == 200
     rows = r.json()
-    # Seed data has 2 returns for 900000001.
+    # Seed data has 2 returns for 900000000001.
     assert len(rows) == 2
-    assert all(row["tin"] == "900000001" for row in rows)
+    assert all(row["tin"] == "900000000001" for row in rows)
 
 
 def test_submit_return_roundtrip(client: TestClient) -> None:
     payload = {
-        "tin": "900000004",
+        "tin": "900000000004",
         "period": "2024",
         "figures": {
             "gross_income": "800000.00",
@@ -64,12 +64,12 @@ def test_submit_return_roundtrip(client: TestClient) -> None:
 
     r2 = client.get(f"/returns/{return_id}")
     assert r2.status_code == 200
-    assert r2.json()["tin"] == "900000004"
+    assert r2.json()["tin"] == "900000000004"
 
 
 def test_submit_return_duplicate_period(client: TestClient) -> None:
     payload = {
-        "tin": "900000005",
+        "tin": "900000000005",
         "period": "2024",
         "figures": {
             "gross_income": "500000.00",
@@ -84,7 +84,8 @@ def test_submit_return_duplicate_period(client: TestClient) -> None:
     assert r2.status_code == 409
 
 
-def test_submit_return_rejects_real_looking_tin(client: TestClient) -> None:
+def test_submit_return_rejects_wrong_length_tin(client: TestClient) -> None:
+    # 9-digit (the old length) is no longer accepted — TINs must be 12 digits.
     payload = {
         "tin": "123456789",
         "period": "2024",
@@ -98,9 +99,24 @@ def test_submit_return_rejects_real_looking_tin(client: TestClient) -> None:
     assert r.status_code == 422
 
 
+def test_submit_return_rejects_real_looking_tin(client: TestClient) -> None:
+    # 12 digits but below the reserved test range minimum (900000000001).
+    payload = {
+        "tin": "123456789012",
+        "period": "2024",
+        "figures": {
+            "gross_income": "100000.00",
+            "deductions": "0",
+            "tax_payable": "10000.00",
+        },
+    }
+    r = client.post("/returns", json=payload)
+    assert r.status_code == 422
+
+
 def test_period_validation(client: TestClient) -> None:
     payload = {
-        "tin": "900000005",
+        "tin": "900000000005",
         "period": "Jan-2024",
         "figures": {
             "gross_income": "100000.00",

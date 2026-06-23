@@ -6,17 +6,19 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-# TINs in this reference are 9-digit numeric strings in a reserved test range.
-# Real-world TINs are not in this range and will be rejected.
-TIN_MIN = 900_000_001
-TIN_MAX = 999_999_999
+# TINs in this reference are 12-digit numeric strings in a reserved test range.
+# Real-world Bangladesh TINs are 12 digits for both individuals and companies;
+# values outside the reserved range below are rejected so this stack cannot be
+# pointed at production identifiers by accident.
+TIN_MIN = 900_000_000_001
+TIN_MAX = 999_999_999_999
 
 # NIDs are synthetic 10-digit numeric strings.
 NID_PATTERN = r"^\d{10}$"
 
 
 def is_test_tin(tin: str) -> bool:
-    if not tin.isdigit() or len(tin) != 9:
+    if not tin.isdigit() or len(tin) != 12:
         return False
     n = int(tin)
     return TIN_MIN <= n <= TIN_MAX
@@ -25,7 +27,7 @@ def is_test_tin(tin: str) -> bool:
 class Taxpayer(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    tin: str = Field(description="9-digit TIN in the reserved test range 900000001–999999999")
+    tin: str = Field(description="12-digit TIN in the reserved test range 900000000001–999999999999")
     nid: str = Field(pattern=NID_PATTERN, description="10-digit synthetic National ID")
     name: str = Field(min_length=1, max_length=120)
     phone: Optional[str] = Field(default=None, max_length=20)
@@ -37,7 +39,7 @@ class Taxpayer(BaseModel):
     def _tin_in_test_range(cls, v: str) -> str:
         if not is_test_tin(v):
             raise ValueError(
-                "TIN must be a 9-digit numeric string in the reserved test range "
+                "TIN must be a 12-digit numeric string in the reserved test range "
                 f"{TIN_MIN}-{TIN_MAX}"
             )
         return v

@@ -9,7 +9,7 @@ COMPOSE ?= docker compose
 SRX_REPO_URL ?= https://github.com/BeyondITL-Mossaddique/sovereign-revenue-exchange
 SRX_REPO_REVISION ?= main
 
-.PHONY: help up down smoke test build clean deploy status promote-staging promote-production delete openchoreo-up
+.PHONY: help up down smoke test build clean deploy status promote-staging promote-production delete openchoreo-up demo
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "usage: make <target>\n\ntargets:\n"} /^[a-zA-Z_\-]+:.*##/ { printf "  %-22s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -27,6 +27,25 @@ down: ## Stop the compose stack
 
 smoke: ## End-to-end curl smoke tests against the local stack
 	scripts/smoke.sh
+
+demo: ## Build + start the compose stack, then print the demo URLs
+	@$(COMPOSE) up -d --build
+	@printf "\nWaiting for exchange-gateway to become healthy "
+	@for i in $$(seq 1 30); do \
+	  if curl -fsS http://127.0.0.1:18000/healthz >/dev/null 2>&1; then \
+	    printf " ready.\n"; break; \
+	  fi; \
+	  printf "."; sleep 1; \
+	  if [ $$i -eq 30 ]; then printf "\nTimed out waiting for gateway.\n"; exit 1; fi; \
+	done
+	@printf "\n\033[1mSovereign Revenue Data Exchange — demo stack is up.\033[0m\n\n"
+	@printf "  \033[1mMinister-facing dashboard\033[0m (non-technical view)\n"
+	@printf "    http://127.0.0.1:18000/\n\n"
+	@printf "  \033[1mSwagger UI\033[0m (technical / engineering view)\n"
+	@printf "    exchange-gateway:    http://127.0.0.1:18000/docs\n"
+	@printf "    taxpayer-registry:   http://127.0.0.1:18001/docs\n"
+	@printf "    returns:             http://127.0.0.1:18002/docs\n\n"
+	@printf "  Stop the stack with:   make down\n"
 
 test: ## Run each service's pytest suite inside its Docker test stage
 	@for s in taxpayer-registry returns exchange-gateway; do \

@@ -18,10 +18,11 @@ of systems found in national revenue ecosystems (eTIN, eReturn, e-VAT,
 EFDMS) purely to make the demonstration concrete. They do not represent,
 replicate, or interoperate with any real production system.
 
-All data is synthetic. TINs use a reserved test range
-(`900000001`–`999999999`) that is not issued in any real-world TIN scheme.
-Names follow the pattern `Test Taxpayer N`. See [`NOTICE`](./NOTICE) for the
-full disclaimer.
+All data is synthetic. Bangladesh TINs are 12 digits for both individuals
+and companies; this reference uses a reserved 12-digit test range
+(`900000000001`–`999999999999`) that is not issued in any real-world TIN
+scheme. Names follow the pattern `Test Taxpayer N`. See
+[`NOTICE`](./NOTICE) for the full disclaimer.
 
 ## What this maps to in a real revenue programme
 

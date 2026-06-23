@@ -39,10 +39,10 @@ for url in "$GATEWAY_URL" "$REGISTRY_URL" "$RETURNS_URL"; do
 done
 
 say "2. taxpayer-registry direct lookup"
-body=$(curl "${CURL_OPTS[@]}" "$REGISTRY_URL/taxpayers/900000001")
+body=$(curl "${CURL_OPTS[@]}" "$REGISTRY_URL/taxpayers/900000000001")
 tin=$(echo "$body" | jq -r .tin)
-[[ "$tin" == "900000001" ]] || fail "expected tin 900000001, got $tin"
-pass "GET /taxpayers/900000001 -> $tin"
+[[ "$tin" == "900000000001" ]] || fail "expected tin 900000000001, got $tin"
+pass "GET /taxpayers/900000000001 -> $tin"
 
 say "3. taxpayer-registry NID lookup"
 body=$(curl "${CURL_OPTS[@]}" "$REGISTRY_URL/taxpayers?nid=1000000003")
@@ -54,7 +54,7 @@ say "4. returns submission + retrieval"
 sub_id=$(curl "${CURL_OPTS[@]}" -X POST "$RETURNS_URL/returns" \
   -H 'content-type: application/json' \
   -d '{
-        "tin": "900000005",
+        "tin": "900000000005",
         "period": "2023",
         "figures": {
           "gross_income": "450000.00",
@@ -71,20 +71,20 @@ pass "GET /returns/$sub_id"
 
 say "5. exchange-gateway composed profile"
 body=$(curl "${CURL_OPTS[@]}" -H "X-Requesting-Agency: $AGENCY" \
-       "$GATEWAY_URL/exchange/taxpayer-profile/900000001")
+       "$GATEWAY_URL/exchange/taxpayer-profile/900000000001")
 tin=$(echo "$body" | jq -r .taxpayer.tin)
 agency=$(echo "$body" | jq -r .served_to_agency)
 returns_n=$(echo "$body" | jq '.returns | length')
-[[ "$tin" == "900000001" ]] || fail "expected tin 900000001, got $tin"
+[[ "$tin" == "900000000001" ]] || fail "expected tin 900000000001, got $tin"
 [[ "$agency" == "$AGENCY" ]] || fail "expected agency $AGENCY, got $agency"
 [[ "$returns_n" -ge 1 ]] || fail "expected >=1 returns, got $returns_n"
-pass "GET /exchange/taxpayer-profile/900000001 -> tin=$tin agency=$agency returns=$returns_n"
+pass "GET /exchange/taxpayer-profile/900000000001 -> tin=$tin agency=$agency returns=$returns_n"
 
 say "6. exchange-gateway verify (match)"
 body=$(curl "${CURL_OPTS[@]}" -X POST -H "X-Requesting-Agency: $AGENCY" \
        -H 'content-type: application/json' \
        "$GATEWAY_URL/exchange/verify" \
-       -d '{"tin":"900000001","period":"2024","claimed_status":"accepted"}')
+       -d '{"tin":"900000000001","period":"2024","claimed_status":"accepted"}')
 verified=$(echo "$body" | jq -r .verified)
 [[ "$verified" == "true" ]] || fail "expected verified=true, got $verified"
 pass "POST /exchange/verify (accepted) -> verified=true"
@@ -93,7 +93,7 @@ say "7. exchange-gateway verify (mismatch)"
 body=$(curl "${CURL_OPTS[@]}" -X POST -H "X-Requesting-Agency: $AGENCY" \
        -H 'content-type: application/json' \
        "$GATEWAY_URL/exchange/verify" \
-       -d '{"tin":"900000001","period":"2024","claimed_status":"rejected"}')
+       -d '{"tin":"900000000001","period":"2024","claimed_status":"rejected"}')
 verified=$(echo "$body" | jq -r .verified)
 actual=$(echo "$body" | jq -r .actual_status)
 [[ "$verified" == "false" ]] || fail "expected verified=false, got $verified"

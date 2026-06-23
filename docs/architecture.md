@@ -184,11 +184,13 @@ The seed fixtures live in:
 
 Constraints enforced in code:
 
-- Every TIN must satisfy `900000001 ≤ tin ≤ 999999999`. The
-  `taxpayer-registry` Pydantic model rejects anything outside this range
-  at construction time; the `returns` service applies the same check on
-  submission. The fixture module also asserts the constraint at import
-  time so a real-looking TIN cannot sneak into seed data.
+- Bangladesh TINs are 12 digits for both individuals and companies. Every
+  TIN must satisfy `900000000001 ≤ tin ≤ 999999999999` (a reserved
+  12-digit test range). The `taxpayer-registry` Pydantic model rejects
+  anything outside this range at construction time; the `returns` service
+  applies the same check on submission. The fixture module also asserts
+  the constraint at import time so a real-looking TIN cannot sneak into
+  seed data.
 - Names start with `Test Taxpayer` or `Test Entity`.
 - NIDs are synthetic 10-digit numerics in the `100000000X` family.
 
