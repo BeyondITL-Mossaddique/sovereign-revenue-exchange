@@ -14,4 +14,3 @@ endpoints:
     port: 8000
     visibility:
       - project
-    schemaFile: openapi/openapi.json

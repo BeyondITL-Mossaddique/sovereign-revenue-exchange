@@ -18,7 +18,6 @@ endpoints:
     port: 8000
     visibility:
       - external
-    schemaFile: openapi/openapi.json
 
 # Declare the in-project services this component depends on. OpenChoreo uses
 # these dependencies to enforce that the upstreams expose a `project`-visible
