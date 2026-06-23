@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: theme("fontFamily.sans");
+    color: theme("colors.ink");
+    background-color: #ffffff;
+  }
+  body {
+    font-feature-settings: "cv11", "ss01";
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.brand.DEFAULT");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-hairline bg-white shadow-card;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(15, 26, 20, 0.04) 0%,
+      rgba(15, 26, 20, 0.09) 50%,
+      rgba(15, 26, 20, 0.04) 100%
+    );
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+  .input-base {
+    @apply h-12 w-full rounded-md border border-hairline bg-white px-3.5 text-base text-ink placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
+  }
+  .btn-primary {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-md bg-brand px-6 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99] hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink transition hover:bg-brand-tint/50;
+  }
+}

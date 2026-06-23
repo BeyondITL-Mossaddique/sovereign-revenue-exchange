@@ -9,7 +9,7 @@ COMPOSE ?= docker compose
 SRX_REPO_URL ?= https://github.com/BeyondITL-Mossaddique/sovereign-revenue-exchange
 SRX_REPO_REVISION ?= main
 
-.PHONY: help up down smoke test build clean deploy status promote-staging promote-production delete openchoreo-up demo
+.PHONY: help up down smoke test build clean deploy status promote-staging promote-production delete openchoreo-up demo dashboard dashboard-dev
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "usage: make <target>\n\ntargets:\n"} /^[a-zA-Z_\-]+:.*##/ { printf "  %-22s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -52,6 +52,15 @@ test: ## Run each service's pytest suite inside its Docker test stage
 	  echo "=== $$s ==="; \
 	  (cd services/$$s && docker build --target test -t srx-$$s:test . >/dev/null && docker run --rm srx-$$s:test) || exit 1; \
 	done
+
+dashboard: ## Build the React dashboard and copy into the gateway static dir
+	cd services/exchange-gateway/web && npm install --no-audit --no-fund && npm run build
+	rm -rf services/exchange-gateway/app/static
+	mkdir -p services/exchange-gateway/app/static
+	cp -R services/exchange-gateway/web/dist/. services/exchange-gateway/app/static/
+
+dashboard-dev: ## Run the Vite dev server (expects FastAPI on :8000 to proxy /exchange)
+	cd services/exchange-gateway/web && npm install --no-audit --no-fund && npm run dev
 
 clean: down ## Stop and remove built dev images
 	@docker image rm -f srx-taxpayer-registry:dev srx-returns:dev srx-exchange-gateway:dev 2>/dev/null || true

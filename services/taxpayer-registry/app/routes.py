@@ -20,6 +20,14 @@ router = APIRouter()
 
 
 def _row_to_taxpayer(row) -> Taxpayer:
+    fields = {
+        "tin": row["tin"],
+        "nid": row["nid"],
+        "name": row["name"],
+        "phone": row["phone"],
+        "address": row["address"],
+        "registered_on": row["registered_on"],
+    }
     return Taxpayer(
         tin=row["tin"],
         nid=row["nid"],
@@ -27,6 +35,7 @@ def _row_to_taxpayer(row) -> Taxpayer:
         phone=row["phone"],
         address=row["address"],
         registered_on=date.fromisoformat(row["registered_on"]),
+        data_classification=Taxpayer.classify(fields),
     )
 
 

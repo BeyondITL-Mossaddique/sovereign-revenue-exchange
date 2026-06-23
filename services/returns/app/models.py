@@ -8,6 +8,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .rules import FilerCategory
+
 
 TIN_MIN = 900_000_000_001
 TIN_MAX = 999_999_999_999
@@ -37,6 +39,10 @@ class ReturnSubmission(BaseModel):
     tin: str = Field(description="12-digit TIN in the reserved test range")
     period: str = Field(description="YYYY or YYYY-Q1..Q4")
     figures: ReturnFigures
+    filer_category: FilerCategory = Field(
+        default=FilerCategory.general,
+        description="Drives the tax-free threshold used to compute liability",
+    )
 
     @field_validator("tin")
     @classmethod
@@ -58,7 +64,21 @@ class ReturnSubmission(BaseModel):
         return v
 
 
+class TaxComputationOut(BaseModel):
+    """Server-computed tax liability surfaced on a return."""
+
+    taxable_income: Decimal
+    threshold: Decimal
+    computed_tax: Decimal
+    no_tax_due: bool
+    minimum_tax_applied: bool
+    filer_category: FilerCategory
+
+
 class TaxReturn(ReturnSubmission):
     id: str
     status: ReturnStatus
     submitted_at: datetime
+    late_filing: bool = False
+    computed: Optional[TaxComputationOut] = None
+    data_classification: str = "Confidential"

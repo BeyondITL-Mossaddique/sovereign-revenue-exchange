@@ -33,14 +33,27 @@ def healthz() -> dict:
 app.include_router(router)
 
 
-# --- Minister-facing static dashboard -------------------------------------
-# Single-page HTML lives in app/static. Served at / for a non-technical
-# audience; the JSON API and Swagger UI remain on their existing paths.
+# --- BeyondITL dashboard --------------------------------------------------
+# The React + Vite bundle is built into app/static during the docker build
+# (multi-stage). At runtime the FastAPI app serves index.html at /, the JS
+# and CSS from /assets/, and the brand emblem from /brand/. The bundle uses
+# relative asset paths, so it works both at / locally and under the
+# OpenChoreo gateway prefix /exchange-gateway-http/.
 _STATIC_DIR = Path(__file__).parent / "static"
 _INDEX_HTML = _STATIC_DIR / "index.html"
 
-if _STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+if (_STATIC_DIR / "assets").is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=_STATIC_DIR / "assets"),
+        name="assets",
+    )
+if (_STATIC_DIR / "brand").is_dir():
+    app.mount(
+        "/brand",
+        StaticFiles(directory=_STATIC_DIR / "brand"),
+        name="brand",
+    )
 
 
 @app.get("/", include_in_schema=False)

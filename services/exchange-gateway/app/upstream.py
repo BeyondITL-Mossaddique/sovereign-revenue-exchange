@@ -42,6 +42,24 @@ async def fetch_taxpayer(settings: Settings, tin: str) -> Optional[dict[str, Any
     return r.json()
 
 
+async def fetch_taxpayers_by_nid(settings: Settings, nid: str) -> list[dict[str, Any]]:
+    url = f"{settings.taxpayer_registry_url}/taxpayers"
+    async with _client(settings.upstream_timeout_s) as c:
+        try:
+            r = await c.get(url, params={"nid": nid})
+        except httpx.HTTPError as exc:
+            raise UpstreamError(
+                status_code=502,
+                detail=f"taxpayer-registry unreachable: {exc.__class__.__name__}",
+            ) from exc
+    if r.status_code != 200:
+        raise UpstreamError(
+            status_code=502,
+            detail=f"taxpayer-registry returned {r.status_code}",
+        )
+    return r.json()
+
+
 async def fetch_returns_for_tin(settings: Settings, tin: str) -> list[dict[str, Any]]:
     url = f"{settings.returns_url}/returns"
     async with _client(settings.upstream_timeout_s) as c:

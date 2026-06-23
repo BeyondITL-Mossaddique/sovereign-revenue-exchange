@@ -4,16 +4,50 @@ This document expands on the high-level diagram in [`README.md`](../README.md)
 and explains the design choices behind the three services and the
 OpenChoreo resources that bind them together.
 
+## Positioning
+
+Bangladesh already has the building blocks this kind of programme depends
+on:
+
+- TIN–NID verification — NBR's e-services portal already validates TIN
+  against National ID and against RJSC company data through live APIs.
+- A unified income-tax/VAT taxpayer ID — the TIN serves both.
+- National interoperability plumbing — the National e-Service Bus
+  (NESB), National API Connect (NAC) and the National Data Exchange
+  (NDX) under BNDA, with the World Bank's SDRMP funding the next wave of
+  revenue-administration modernisation.
+
+This reference is independent and **does not** present any of those as
+new. It demonstrates a *complementary* shape: a governed, on-premises,
+auditable internal developer platform that other state services can be
+built on, in a way that fits cleanly next to the existing
+interoperability backbone.
+
+What is genuinely new here is the *pattern*, not the capability:
+
+1. Open-source, no vendor lock-in — state-owned, extensible by its own
+   teams, Apache-2.0 throughout.
+2. Provably on-premises — Restricted data (NID, banking) is classified at
+   the field level so PDPO 2025 localisation can be enforced.
+3. One consistent, auditable internal developer platform — governed APIs,
+   dev → staging → production promotion, observability, audit log of
+   every gateway call.
+4. A reference pattern for building governed, observable services that
+   fit the e-Service Bus / NDX / BNDA direction — not an attempt to
+   replace it.
+
 ## Goals
 
-1. Show, with running code, how a national revenue authority can put a
-   governed API surface in front of identity, return-filing, and
-   inter-agency data exchange — without proprietary middleware.
+1. Show, with running code, how a state team can put a governed API
+   surface in front of identity, return-filing and inter-agency data
+   exchange, on a platform they own end-to-end.
 2. Use only OpenChoreo CRDs and conventions that exist in the published
    `release-v1.1` samples. Do not invent fields.
 3. Keep the demo small enough to fit on a single 8 GB / 4 vCPU host
    running OpenChoreo's `--with-build --with-observability` profile.
-4. Keep every line of generated data obviously synthetic.
+4. Keep every line of generated data obviously synthetic, and tag every
+   field with its PDPO 2025 classification so the on-prem localisation
+   guarantee is something the code itself can defend.
 
 ## Service boundaries
 
@@ -73,26 +107,52 @@ Returns are uniquely scoped to `(tin, period)` — re-submitting the same
 pair returns `409`. Period accepts annual (`YYYY`) and quarterly
 (`YYYY-Q1..Q4`) forms only.
 
+Tax liability is computed from a small, explicit table of illustrative
+FY2025-26 figures in `services/returns/app/rules.py` (tax-free
+thresholds by filer category, slabs at 10/15/20/25/30%, a 5,000 BDT
+minimum tax, the 5,000,000 BDT VAT registration threshold). Every
+figure is marked **illustrative — verify against the current Finance
+Act / NBR before any real use.** Returns submitted outside the
+1 July–30 November filing window are flagged `late_filing: true`.
+
 ### exchange-gateway
 
 The only externally-exposed component. It composes the two upstream
-services into a single governed read surface for other agencies, and it
-verifies claims:
+services into a single governed read surface for other agencies, verifies
+claims, and surfaces both a minister-facing dashboard and an access log:
 
-- `GET /exchange/taxpayer-profile/{tin}` — taxpayer + their returns, in
-  one response. The `X-Requesting-Agency` header is echoed into a
-  `served_to_agency` field so the upstream can attribute reads to a
-  requesting party (the place an audit log would attach).
+- `GET /exchange/taxpayer-profile/{tin}` — taxpayer + their returns
+  (with computed tax and `late_filing` flags), in one response. The
+  `X-Requesting-Agency` header is echoed into `served_to_agency` and
+  written to the audit trail.
 - `POST /exchange/verify` — confirm that a stated `(tin, period,
-  claimed_status)` matches reality. This is the API a customs officer's
-  workstation or a court system would call to verify whether a return was
-  filed and accepted.
+  claimed_status)` matches reality.
+- `GET /exchange/duplicates/by-nid/{nid}` — list of taxpayer records
+  sharing the given NID (this is what the dashboard's "Find duplicates"
+  panel calls to demonstrate dedupe end-to-end).
+- `GET /exchange/access-log?limit=N` — the most-recent-first audit
+  trail of gateway calls (timestamp, requesting agency, method, path,
+  target TIN, status code).
+
+Every call into the exchange surface is appended to a bounded in-memory
+audit log. The dashboard exposes it under the "Retrieved through the
+governed gateway" strip. In production this log would be flushed to an
+append-only store; the reference keeps the last 200 entries in memory.
 
 The gateway calls the upstreams over in-cluster DNS
 (`http://taxpayer-registry:8000`, `http://returns:8000`). It does not
 retry — retries belong in the mediation layer (OpenChoreo's gateway) and
 masking them at the application layer hides upstream failures during smoke
 tests.
+
+#### Dashboard
+
+The minister-facing dashboard is built from `services/exchange-gateway/web`
+(React + Vite + TypeScript + Tailwind + shadcn-style components + lucide
+icons) and copied into the FastAPI static dir by the multi-stage docker
+build. Asset paths are all relative, so the bundle works both at `/`
+locally and behind the OpenChoreo gateway's `/exchange-gateway-http/`
+prefix without rebuilding.
 
 ## OpenChoreo resources
 

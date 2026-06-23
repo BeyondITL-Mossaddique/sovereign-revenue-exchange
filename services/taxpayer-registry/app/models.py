@@ -5,6 +5,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .rules import DataClassification, record_classification
+
 
 # TINs in this reference are 12-digit numeric strings in a reserved test range.
 # Real-world Bangladesh TINs are 12 digits for both individuals and companies;
@@ -33,6 +35,13 @@ class Taxpayer(BaseModel):
     phone: Optional[str] = Field(default=None, max_length=20)
     address: Optional[str] = Field(default=None, max_length=200)
     registered_on: date
+    data_classification: DataClassification = Field(
+        default=DataClassification.restricted,
+        description=(
+            "Highest PDPO 2025 classification present in this record. "
+            "Always Restricted while NID is present."
+        ),
+    )
 
     @field_validator("tin")
     @classmethod
@@ -43,6 +52,10 @@ class Taxpayer(BaseModel):
                 f"{TIN_MIN}-{TIN_MAX}"
             )
         return v
+
+    @classmethod
+    def classify(cls, fields: dict) -> DataClassification:
+        return record_classification(fields)
 
 
 class CandidateRecord(BaseModel):

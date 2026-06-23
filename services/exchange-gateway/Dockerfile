@@ -1,7 +1,20 @@
 # syntax=docker/dockerfile:1.7
 # Multi-stage build for the exchange-gateway service.
+#
+# The React + Vite dashboard is built in a Node stage and copied into the
+# Python image as the FastAPI static directory.
 
 ARG PYTHON_VERSION=3.12
+ARG NODE_VERSION=22
+
+
+FROM node:${NODE_VERSION}-alpine AS dashboard
+WORKDIR /web
+COPY web/package.json web/package-lock.json* ./
+RUN npm install --no-audit --no-fund
+COPY web/ ./
+RUN npm run build
+
 
 FROM python:${PYTHON_VERSION}-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -20,6 +33,10 @@ COPY requirements-dev.txt .
 RUN pip install -r requirements-dev.txt
 COPY app ./app
 COPY tests ./tests
+# Replace the source-tree static dir with the freshly built dashboard so the
+# dashboard-root smoke test exercises the production bundle.
+RUN rm -rf ./app/static && mkdir -p ./app/static
+COPY --from=dashboard /web/dist/ ./app/static/
 ENV PYTHONPATH=/app
 CMD ["pytest", "-q"]
 
@@ -39,6 +56,11 @@ RUN groupadd --system --gid 1001 app && \
 COPY --from=base /opt/venv /opt/venv
 COPY --from=openapi /out/openapi.json /openapi/openapi.json
 COPY --chown=app:app app ./app
+# Overwrite the source-tree static dir with the freshly built dashboard so the
+# runtime image always ships the React bundle, not whatever happened to be in
+# the repo at the time of the build.
+RUN rm -rf ./app/static && mkdir -p ./app/static && chown -R app:app ./app/static
+COPY --from=dashboard --chown=app:app /web/dist/ ./app/static/
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \

@@ -9,43 +9,85 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query
 
 from . import db
-from .models import ReturnFigures, ReturnStatus, ReturnSubmission, TaxReturn
+from .models import (
+    ReturnFigures,
+    ReturnStatus,
+    ReturnSubmission,
+    TaxComputationOut,
+    TaxReturn,
+)
+from .rules import FilerCategory, compute_tax, is_late_filing
 
 router = APIRouter()
 
 
 def _row_to_return(row) -> TaxReturn:
+    category = FilerCategory(row["filer_category"]) if "filer_category" in row.keys() else FilerCategory.general
+    gross = Decimal(row["gross_income"])
+    deductions = Decimal(row["deductions"])
+    submitted_at = datetime.fromisoformat(row["submitted_at"].replace("Z", "+00:00"))
+    computation = compute_tax(gross, deductions, category)
+    late = is_late_filing(row["period"], submitted_at.date())
     return TaxReturn(
         id=row["id"],
         tin=row["tin"],
         period=row["period"],
         figures=ReturnFigures(
-            gross_income=Decimal(row["gross_income"]),
-            deductions=Decimal(row["deductions"]),
+            gross_income=gross,
+            deductions=deductions,
             tax_payable=Decimal(row["tax_payable"]),
             currency=row["currency"],
         ),
         status=ReturnStatus(row["status"]),
-        submitted_at=datetime.fromisoformat(row["submitted_at"].replace("Z", "+00:00")),
+        submitted_at=submitted_at,
+        filer_category=category,
+        late_filing=late,
+        computed=TaxComputationOut(
+            taxable_income=computation.taxable_income,
+            threshold=computation.threshold,
+            computed_tax=computation.computed_tax,
+            no_tax_due=computation.no_tax_due,
+            minimum_tax_applied=computation.minimum_tax_applied,
+            filer_category=computation.category,
+        ),
+        data_classification="Confidential",
     )
 
 
 @router.post("/returns", response_model=TaxReturn, status_code=201, tags=["returns"])
 def submit_return(payload: ReturnSubmission) -> TaxReturn:
+    submitted_at = datetime.now(timezone.utc)
+    computation = compute_tax(
+        payload.figures.gross_income,
+        payload.figures.deductions,
+        payload.filer_category,
+    )
+    late = is_late_filing(payload.period, submitted_at.date())
     rec = TaxReturn(
         id=f"R-{uuid.uuid4().hex[:8].upper()}",
         tin=payload.tin,
         period=payload.period,
         figures=payload.figures,
         status=ReturnStatus.submitted,
-        submitted_at=datetime.now(timezone.utc),
+        submitted_at=submitted_at,
+        filer_category=payload.filer_category,
+        late_filing=late,
+        computed=TaxComputationOut(
+            taxable_income=computation.taxable_income,
+            threshold=computation.threshold,
+            computed_tax=computation.computed_tax,
+            no_tax_due=computation.no_tax_due,
+            minimum_tax_applied=computation.minimum_tax_applied,
+            filer_category=computation.category,
+        ),
+        data_classification="Confidential",
     )
     try:
         with db.cursor() as cur:
             cur.execute(
                 "INSERT INTO tax_return (id, tin, period, gross_income, deductions, "
-                "tax_payable, currency, status, submitted_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "tax_payable, currency, status, submitted_at, filer_category) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     rec.id,
                     rec.tin,
@@ -56,6 +98,7 @@ def submit_return(payload: ReturnSubmission) -> TaxReturn:
                     rec.figures.currency,
                     rec.status.value,
                     rec.submitted_at.isoformat().replace("+00:00", "Z"),
+                    rec.filer_category.value,
                 ),
             )
     except sqlite3.IntegrityError as exc:

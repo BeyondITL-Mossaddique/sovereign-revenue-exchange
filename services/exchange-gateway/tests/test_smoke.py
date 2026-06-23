@@ -59,12 +59,12 @@ def test_dashboard_root(client: TestClient) -> None:
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
     body = r.text
-    # Page renders as the BeyondITL minister-facing dashboard, defaults
-    # the TIN input to a valid 12-digit synthetic value, and references
-    # the gateway endpoint it calls.
+    # The React entry HTML carries the title and the BeyondITL reference
+    # description; the rest of the page (TIN default, endpoint URLs) lives
+    # in the bundled JS that is served from /assets/.
+    assert "Sovereign Revenue Data Exchange" in body
     assert "BeyondITL" in body
-    assert "900000000001" in body
-    assert "/exchange/taxpayer-profile/" in body
+    assert '<div id="root"></div>' in body
 
 
 @respx.mock

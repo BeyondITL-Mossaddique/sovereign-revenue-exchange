@@ -11,6 +11,16 @@ class TaxpayerSummary(BaseModel):
     nid: str
     name: str
     registered_on: date
+    data_classification: str = "Restricted"
+
+
+class TaxComputationSummary(BaseModel):
+    taxable_income: str
+    threshold: str
+    computed_tax: str
+    no_tax_due: bool
+    minimum_tax_applied: bool
+    filer_category: str
 
 
 class ReturnSummary(BaseModel):
@@ -19,6 +29,8 @@ class ReturnSummary(BaseModel):
     status: str
     tax_payable: str  # kept as string to avoid decimal precision drift in JSON
     currency: str
+    late_filing: bool = False
+    computed: Optional[TaxComputationSummary] = None
 
 
 class TaxpayerProfile(BaseModel):
@@ -45,3 +57,18 @@ class VerifyResponse(BaseModel):
     actual_status: Optional[str]
     served_to_agency: Optional[str]
     checked_at: datetime
+
+
+class AccessLogEntry(BaseModel):
+    """One audited gateway call.
+
+    Identifies what was requested, by which agency, and when. No payload is
+    stored — this is an access trail, not a copy of the data.
+    """
+
+    at: datetime
+    agency: Optional[str]
+    method: str
+    path: str
+    target_tin: Optional[str] = None
+    status_code: int
